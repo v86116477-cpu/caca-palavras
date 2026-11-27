@@ -93,6 +93,25 @@ tr.me td{color:var(--acc)}
 .dialog{background:var(--card);border-radius:18px;padding:24px;max-width:420px}
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ok);color:#052e16;padding:10px 18px;border-radius:12px;font-weight:600;z-index:20}
 .how{color:var(--mut);font-size:.92rem;line-height:1.6;margin:0;padding-left:18px}
+body.horror{background:radial-gradient(circle at 50% 30%,#3b0a0a 0%,#050505 70%)}
+body.horror .timer{color:#ef4444;text-shadow:0 0 12px #b91c1c}
+body.horror .card{background:#1a1414}
+body.horror .cell{background:#2a1f1f}
+body.horror #board{background:#0a0606}
+#hFog{position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,transparent 35%,#000 100%);z-index:5;transition:opacity 1s}
+#hGhost{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:6;font-weight:700;font-size:1.1rem;color:#fca5a5;background:#000a;padding:6px 14px;border-radius:99px;font-variant-numeric:tabular-nums}
+#hGhost.urgent{color:#fff;background:#b91c1c;animation:pulse .5s infinite}
+@keyframes pulse{50%{transform:translateX(-50%) scale(1.15)}}
+#hWhisper{position:fixed;bottom:26px;left:50%;transform:translateX(-50%);z-index:6;color:#fca5a5;font-style:italic;font-size:1.2rem;opacity:0;pointer-events:none;letter-spacing:1px}
+#hWhisper.show{animation:whisper 4s ease}
+@keyframes whisper{0%{opacity:0;filter:blur(6px)}20%{opacity:.9;filter:blur(0)}80%{opacity:.9}100%{opacity:0;filter:blur(4px)}}
+#hMute{position:fixed;bottom:16px;right:16px;z-index:7;background:#000a;color:#fff;padding:8px 11px}
+#hScare{position:fixed;inset:0;z-index:30;background:#7f1d1d;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;animation:scare .9s ease}
+#hScare div{font-size:12rem;line-height:1}#hScare p{font-size:2rem;font-weight:700;letter-spacing:3px}
+@keyframes scare{0%{background:#000;transform:scale(1.3)}15%{background:#dc2626}100%{background:#450a0a;transform:scale(1)}}
+.timer.glitch{color:#fff!important;transform:skewX(-12deg);text-shadow:3px 0 #f00,-3px 0 #0ff}
+body.shake .wrap{animation:shake .45s linear 2}
+@keyframes shake{0%,100%{transform:translate(0)}20%{transform:translate(-8px,4px)}40%{transform:translate(7px,-5px)}60%{transform:translate(-6px,-3px)}80%{transform:translate(5px,6px)}}
 .loading{text-align:center;padding:60px 20px;color:var(--mut)}
 </style>
 </head>
@@ -171,6 +190,7 @@ tr.me td{color:var(--acc)}
           <option value="M">🟡 Médio em todas as fases (12×12)</option>
           <option value="D">🔴 Difícil em todas as fases (15×15)</option>
           <option value="X">💀 Extremamente difícil em todas (18×18)</option>
+          <option value="I">☠️ Impossível em todas (20×20, idiomas, cronômetro misterioso)</option>
         </select>
         <div class="row" style="margin-top:12px">
           <button class="btn2" id="savePhasesBtn">Salvar configurações</button>
@@ -207,6 +227,8 @@ tr.me td{color:var(--acc)}
   </section>
 </div>
 <div id="overlay" class="overlay hidden"></div>
+<div id="hFog" class="hidden"></div><div id="hGhost" class="hidden"></div><div id="hWhisper" class="hidden"></div>
+<button id="hMute" class="hidden" title="Som">🔊</button><div id="hScare" class="hidden"></div>
 <script>
 const THEMES={
  ANIMAIS:["CACHORRO","GATO","ELEFANTE","GIRAFA","TUCANO","JACARE","CAPIVARA","ONCA","MACACO","CAVALO","CORUJA","GOLFINHO","TARTARUGA","PINGUIM","ZEBRA","LEAO","TIGRE","COELHO","PAPAGAIO","BALEIA","RAPOSA","LOBO","ARARA","FORMIGA"],
@@ -216,13 +238,46 @@ const THEMES={
  COMIDAS:["FEIJOADA","COXINHA","PASTEL","BRIGADEIRO","PAMONHA","TAPIOCA","MOQUECA","ACARAJE","EMPADA","LASANHA","PIZZA","CHURRASCO","FAROFA","PUDIM","BOLO","SUSHI","ESTROGONOFE","QUINDIM","CUSCUZ","VATAPA","ESFIHA","MINGAU","PIPOCA","BAIAO"],
  PROFISSOES:["MEDICO","ADVOGADO","ENGENHEIRO","PROFESSOR","PILOTO","BOMBEIRO","DENTISTA","PADEIRO","CARTEIRO","JORNALISTA","ARQUITETO","MOTORISTA","CONTADOR","VETERINARIO","PEDREIRO","COZINHEIRO","PINTOR","ATOR","MUSICO","CIENTISTA","AGRONOMO","FARMACEUTICO","ELETRICISTA","GARCOM"]
 };
-const DIFF={F:{n:10,w:6,dirs:[[0,1],[1,0]],label:"Fácil"},M:{n:12,w:8,dirs:[[0,1],[1,0],[1,1],[-1,1]],label:"Médio"},D:{n:15,w:10,dirs:[[0,1],[1,0],[1,1],[-1,1],[0,-1],[-1,0],[-1,-1],[1,-1]],label:"Difícil"},X:{n:18,w:14,dirs:[[0,1],[1,0],[1,1],[-1,1],[0,-1],[-1,0],[-1,-1],[1,-1]],label:"Extremamente difícil",decoy:true}};
+const DIFF={F:{n:10,w:6,dirs:[[0,1],[1,0]],label:"Fácil"},M:{n:12,w:8,dirs:[[0,1],[1,0],[1,1],[-1,1]],label:"Médio"},D:{n:15,w:10,dirs:[[0,1],[1,0],[1,1],[-1,1],[0,-1],[-1,0],[-1,-1],[1,-1]],label:"Difícil"},X:{n:18,w:14,dirs:[[0,1],[1,0],[1,1],[-1,1],[0,-1],[-1,0],[-1,-1],[1,-1]],label:"Extremamente difícil",decoy:true},I:{n:20,w:16,dirs:[[0,1],[1,0],[1,1],[-1,1],[0,-1],[-1,0],[-1,-1],[1,-1]],label:"Impossível"}};
+const FOREIGN=["SHOPPING","DELIVERY","WEEKEND","MOUSE","SOFTWARE","BALLET","CHEF","BUFFET","SHOW","MARKETING","FASHION","HAPPYHOUR","SELFIE","ONLINE","EMAIL","WIFI","SMARTPHONE","KARAOKE","TSUNAMI","NINJA","EMOJI","SAMURAI","BONSAI","TOFU","PIZZA","SPAGHETTI","CROISSANT","DESIGN","FREELANCER","STARTUP","PLAYLIST","STREAMING","HAMBURGER","MILKSHAKE","BROWNIE","CUPCAKE","GAME","HOBBY","LAYOUT","FEEDBACK","DEADLINE","CHECKIN","PERFORMANCE","OUTDOOR","PAPARAZZI","MANGA","ANIME","RENDEZVOUS"];
+function buildImpossible(p){
+  const rnd=mulberry(hash(p.code+"#I")());const d=DIFF.I,n=d.n,R=k=>Math.floor(rnd()*k);
+  const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=R(i+1);[a[i],a[j]]=[a[j],a[i]]}return a};
+  for(let attempt=0;attempt<40;attempt++){
+    const theme=shuffle(THEMES[p.theme].slice()).slice(0,8),foreign=shuffle(FOREIGN.slice()).slice(0,12);
+    const pool=[...new Set([...theme,...foreign])].filter(w=>w.length<=n).sort((a,b)=>b.length-a.length);
+    const g=Array.from({length:n},()=>Array(n).fill(""));const placed=[];
+    for(const w of pool){if(placed.length>=d.w)break;
+      let best=null,bestScore=-1;
+      for(let t=0;t<400;t++){const [dr,dc]=d.dirs[R(8)];const r=R(n),c=R(n);
+        const er=r+dr*(w.length-1),ec=c+dc*(w.length-1);if(er<0||er>=n||ec<0||ec>=n)continue;
+        let fit=true,ov=0;for(let k=0;k<w.length;k++){const x=g[r+dr*k][c+dc*k];if(x){if(x!==w[k]){fit=false;break}ov++}}
+        if(!fit||ov>=w.length-1)continue;const sc=ov*10+rnd();if(sc>bestScore){bestScore=sc;best=[r,c,dr,dc]}}
+      if(!best)continue;const [r,c,dr,dc]=best;const cells=[];
+      for(let k=0;k<w.length;k++){g[r+dr*k][c+dc*k]=w[k];cells.push([r+dr*k,c+dc*k])}placed.push({w,cells});
+    }
+    if(placed.length<d.w)continue;
+    const put=(s)=>{const [dr,dc]=d.dirs[R(8)];const r=R(n),c=R(n);const er=r+dr*(s.length-1),ec=c+dc*(s.length-1);if(er<0||er>=n||ec<0||ec>=n)return;
+      for(let k=0;k<s.length;k++)if(g[r+dr*k][c+dc*k])return;for(let k=0;k<s.length;k++)g[r+dr*k][c+dc*k]=s[k]};
+    const L="ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    // palavras quase iguais (uma letra trocada) para enganar
+    for(const pw of placed){for(let t=0;t<30;t++){const i=1+R(pw.w.length-1);let ch=L[R(26)];if(ch===pw.w[i])continue;const s=pw.w.slice(0,i)+ch+pw.w.slice(i+1);const before=JSON.stringify(g);put(s);if(JSON.stringify(g)!==before)break}}
+    // pedaços de palavras para confundir
+    const all=[...pool,...placed.map(x=>x.w)];
+    for(let t=0;t<n*14;t++){const w=all[R(all.length)];if(w.length<4)continue;const len=2+R(Math.min(4,w.length-2));const st=R(w.length-len+1);put(w.slice(st,st+len))}
+    for(let r=0;r<n;r++)for(let c=0;c<n;c++)if(!g[r][c]){const w=all[R(all.length)];g[r][c]=w[R(w.length)]} // letras das próprias palavras
+    shuffle(placed);
+    return{g,n,words:placed,masked:true};
+  }
+}
+
 const COLORS=["#fca5a5","#fdba74","#fde047","#86efac","#67e8f9","#a5b4fc","#f0abfc","#fda4af","#bef264","#5eead4","#c4b5fd","#fcd34d"];
 // seeded rng
 function hash(s){let h=1779033703^s.length;for(let i=0;i<s.length;i++){h=Math.imul(h^s.charCodeAt(i),3432918353);h=h<<13|h>>>19}return()=>{h=Math.imul(h^h>>>16,2246822507);h=Math.imul(h^h>>>13,3266489909);return(h^=h>>>16)>>>0}}
 function mulberry(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 
 function buildPuzzle(p){
+  if(p.diff==="I")return buildImpossible(p);
   const rnd=mulberry(hash(p.code)());const d=DIFF[p.diff];const n=d.n;
   for(let attempt=0;attempt<60;attempt++){
     const pool=THEMES[p.theme].filter(w=>w.length<=n).slice();
@@ -292,12 +347,12 @@ function phaseSpec(phase){
 // modo: "C" crescente, "F" fácil, "M" médio, "D" difícil, "X" extremamente difícil (sem modo = regra antiga)
 function diffFor(phase){
   const m=S.cfg.mode,N=S.cfg.phases;
-  if(m==="F"||m==="M"||m==="D"||m==="X")return m;
+  if(m==="F"||m==="M"||m==="D"||m==="X"||m==="I")return m;
   if(m==="C"){const f=phase/N;return f<=0.3?"F":f<=0.6?"M":f<=0.85?"D":"X"}
   return phase<=3?"F":phase<=7?"M":"D";
 }
-const DLABEL={F:"Fácil",M:"Médio",D:"Difícil",X:"Extremamente difícil"};
-const MLABEL={C:"Crescente",F:"Fácil",M:"Médio",D:"Difícil",X:"Extremamente difícil"};
+const DLABEL={F:"Fácil",M:"Médio",D:"Difícil",X:"Extremamente difícil",I:"☠️ Impossível"};
+const MLABEL={C:"Crescente",F:"Fácil",M:"Médio",D:"Difícil",X:"Extremamente difícil",I:"☠️ Impossível"};
 const modeOf=()=>S.cfg.mode||"C";
 const TNAMES={ANIMAIS:"Animais",FRUTAS:"Frutas",PAISES:"Países",ESPORTES:"Esportes",COMIDAS:"Comidas",PROFISSOES:"Profissões"};
 const cap=t=>TNAMES[t]||t;
@@ -428,7 +483,7 @@ async function startPhase(phase){
   if(existing){ov.innerHTML=`<div class="count" style="font-size:3rem">Retomando…</div><div class="msg">O cronômetro continuou contando desde que você começou.</div>`;
     const sk=parseFloat(lsGet("cp_skew")||"0");S.skew=isNaN(sk)?0:sk;setTimeout(()=>{ov.classList.add("hidden");begin(toMs(existing.startedAt))},1200);return}
   let n=3;const step=async()=>{
-    if(n>0){ov.innerHTML=`<div class="count">${n}</div><div class="msg">Fase ${phase} · prepare-se, ${esc(S.me.name)}!</div>`;n--;setTimeout(step,900);return}
+    if(n>0){ov.innerHTML=`<div class="count">${n}</div><div class="msg">Fase ${phase} · prepare-se, ${esc(S.me.name)}!</div>`+(sp.diff==="I"?`<div class="msg" style="color:var(--bad);max-width:420px">☠️ Nível Impossível: palavras cruzadas, em outros idiomas e escondidas na lista (só a 1ª e a última letra). Contém sons e clarões de susto.</div>`:"");n--;setTimeout(step,900);return}
     let startedAt;
     try{const t0=Date.now();await setDoc("runs/"+runId(phase),{season:S.cfg.season,user:S.me.key,name:S.me.name,phase,startedAt:TS(),done:false});
       const t1=Date.now();const d=await getDoc("runs/"+runId(phase));startedAt=toMs(d&&d.startedAt)||t0;S.skew=startedAt-(t0+t1)/2;lsSet("cp_skew",String(S.skew))}
@@ -436,14 +491,16 @@ async function startPhase(phase){
     ov.classList.add("hidden");begin(startedAt)};
   step();
 }
-function begin(startedAt){const g=S.game;g.startedAt=startedAt;drawBoard(false);clearInterval(g.timer);g.timer=setInterval(()=>{$("timer").textContent=fmt(Date.now()+S.skew-g.startedAt)},50)}
+function begin(startedAt){const g=S.game;g.startedAt=startedAt;drawBoard(false);clearInterval(g.timer);
+  const horror=g.sp.diff==="I";if(horror)Horror.start();
+  g.timer=setInterval(()=>{const t=fmt(Date.now()+S.skew-g.startedAt);if(!horror||!Horror.glitching)$("timer").textContent=t},50)}
 function drawBoard(hide){
   const g=S.game,b=$("board"),{n}=g.puz;const cs=Math.max(22,Math.min(46,Math.floor(Math.min(window.innerWidth-60,760)/n)-4));
   b.style.setProperty("--cs",cs+"px");b.style.gridTemplateColumns=`repeat(${n},var(--cs))`;b.innerHTML="";
   for(let r=0;r<n;r++)for(let c=0;c<n;c++){const d=document.createElement("div");d.className="cell";d.dataset.r=r;d.dataset.c=c;d.textContent=hide?"":g.puz.g[r][c];b.appendChild(d)}
   g.puz.words.forEach((w,i)=>{if(g.found.has(w.w))paint(w.cells,COLORS[i%COLORS.length])});
 }
-function drawWords(){const g=S.game,ul=$("wordList");ul.innerHTML="";g.puz.words.forEach(w=>{const li=document.createElement("li");li.textContent=w.w;if(g.found.has(w.w))li.className="done";ul.appendChild(li)});
+function drawWords(){const g=S.game,ul=$("wordList");ul.innerHTML="";g.puz.words.forEach(w=>{const li=document.createElement("li");const hid=g.puz.masked&&!g.found.has(w.w);li.textContent=hid?w.w[0]+"•".repeat(w.w.length-2)+w.w[w.w.length-1]:w.w;if(hid)li.title=w.w.length+" letras";if(g.found.has(w.w))li.className="done";ul.appendChild(li)});
   const t=g.puz.words.length,f=g.found.size;$("cnt").textContent=`${f}/${t}`;$("progBar").style.width=(f/t*100)+"%"}
 const cellAt=(r,c)=>$("board").children[r*S.game.puz.n+c];
 function paint(cells,col){cells.forEach(([r,c])=>{const e=cellAt(r,c);e.classList.add("found");e.style.background=col})}
@@ -462,6 +519,7 @@ function check(cells){
     if(w.cells===cells||key===k2||key===k3){g.found.add(w.w);paint(w.cells,COLORS[i%COLORS.length]);drawWords();if(g.found.size===g.puz.words.length)finish()}});
 }
 async function finish(){
+  Horror.stop();
   const g=S.game;g.finished=true;clearInterval(g.timer);let ms=Date.now()+S.skew-g.startedAt;$("timer").textContent=fmt(ms);
   let saved=false;
   for(let i=0;i<3;i++){try{await updDoc("runs/"+runId(g.phase),{done:true,finishedAt:TS()});saved=true;break}catch(e){console.warn(e);await new Promise(r=>setTimeout(r,800))}}
@@ -477,6 +535,31 @@ async function finish(){
   $("dlgHome").onclick=()=>{ov.classList.add("hidden");enterHome()};
   if(np)$("dlgNext").onclick=()=>{ov.classList.add("hidden");startPhase(np)};
 }
-$("backBtn").onclick=()=>{if(S.game)clearInterval(S.game.timer);$("overlay").classList.add("hidden");enterHome()};
+$("backBtn").onclick=()=>{Horror.stop();if(S.game)clearInterval(S.game.timer);$("overlay").classList.add("hidden");enterHome()};
 window.addEventListener("resize",()=>{if(S.game&&!$("gameSec").classList.contains("hidden"))drawBoard(!S.game.startedAt)});
+
+// ---------- modo Impossível: cronômetro misterioso ----------
+const Horror=(()=>{
+  const MSGS=["Ele está chegando…","Você não vai conseguir.","Tic… tac…","Os outros já terminaram.","Não olhe para trás.","Rápido. RÁPIDO.","Faltam poucas… será?","Eu estou vendo você.","O tempo está acabando.","Você ouviu isso?","Não pare agora.","Mais rápido…"];
+  let on=false,iv=[],ghost=90,ghostMax=90,ac=null,muted=false,beatT=null;
+  const H={glitching:false};
+  const el=id=>document.getElementById(id);
+  function sound(freq,dur,vol,type){if(muted)return;try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();const o=ac.createOscillator(),g=ac.createGain();o.type=type||"sine";o.frequency.setValueAtTime(freq,ac.currentTime);o.frequency.exponentialRampToValueAtTime(Math.max(20,freq*0.5),ac.currentTime+dur);g.gain.setValueAtTime(vol,ac.currentTime);g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+dur);o.connect(g);g.connect(ac.destination);o.start();o.stop(ac.currentTime+dur)}catch(e){}}
+  function beat(){if(!on)return;sound(60,0.18,0.5);setTimeout(()=>sound(55,0.15,0.35),180);const urg=Math.max(0,Math.min(1,1-ghost/ghostMax));beatT=setTimeout(beat,1300-900*urg)}
+  function whisper(){const w=el("hWhisper");w.textContent=MSGS[Math.floor(Math.random()*MSGS.length)];w.classList.remove("show");void w.offsetWidth;w.classList.add("show")}
+  function glitch(){const t=el("timer");H.glitching=true;t.classList.add("glitch");const opts=["??:??","66:66","NÃO PARE","00:00.0","--:--",String(Math.floor(Math.random()*99)).padStart(2,"0")+":"+String(Math.floor(Math.random()*60)).padStart(2,"0")];
+    let k=0;const g=setInterval(()=>{t.textContent=opts[Math.floor(Math.random()*opts.length)];if(++k>6){clearInterval(g);t.classList.remove("glitch");H.glitching=false}},90);sound(900+Math.random()*600,0.08,0.05,"square")}
+  function scare(){const s=el("hScare");s.innerHTML=`<div>💀</div><p>${MSGS[Math.floor(Math.random()*MSGS.length)].toUpperCase()}</p>`;s.classList.remove("hidden");document.body.classList.add("shake");
+    sound(45,1.2,0.9,"sawtooth");sound(320,0.6,0.25,"square");setTimeout(()=>{s.classList.add("hidden");document.body.classList.remove("shake")},900);
+    ghostMax=Math.max(25,ghostMax-15);ghost=ghostMax}
+  function tick(){if(!on)return;ghost-=1;if(ghost<=0)scare();
+    const gEl=el("hGhost");gEl.textContent="⏳ "+String(Math.floor(Math.max(0,ghost)/60)).padStart(2,"0")+":"+String(Math.max(0,ghost)%60).padStart(2,"0");gEl.classList.toggle("urgent",ghost<=10);
+    const el2=S.game&&S.game.startedAt?(Date.now()+S.skew-S.game.startedAt)/1000:0;el("hFog").style.opacity=Math.min(0.75,0.15+el2/400);
+    if(ghost<=10)sound(1200,0.05,0.04,"square")}
+  H.start=()=>{if(on)return;on=true;ghost=ghostMax=90;document.body.classList.add("horror");["hFog","hGhost","hWhisper","hMute"].forEach(i=>el(i).classList.remove("hidden"));
+    iv.push(setInterval(tick,1000),setInterval(()=>{if(Math.random()<0.6)glitch()},5000),setInterval(whisper,14000));setTimeout(whisper,3000);beat()};
+  H.stop=()=>{on=false;iv.forEach(clearInterval);iv=[];clearTimeout(beatT);H.glitching=false;document.body.classList.remove("horror","shake");["hFog","hGhost","hWhisper","hMute","hScare"].forEach(i=>el(i)&&el(i).classList.add("hidden"));const t=el("timer");if(t)t.classList.remove("glitch")};
+  document.addEventListener("click",e=>{if(e.target&&e.target.id==="hMute"){muted=!muted;e.target.textContent=muted?"🔇":"🔊"}});
+  return H;
+})();
 </script></body></html>
