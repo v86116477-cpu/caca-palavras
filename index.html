@@ -5,16 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Caça-Palavras: Competição</title>
 <script>
-/* ===========================================================
+/* ============================================================
    CONFIGURAÇÃO DO FIREBASE: cole aqui o objeto firebaseConfig
    do seu projeto (Console do Firebase > Configurações do projeto
-   > Seus apps > Aplicativo da Web).
+   > Seus apps > App da Web).
    ============================================================ */
 window.FIREBASE_CONFIG = {
   apiKey: "AIzaSyCI4Lx4joveBKkOjUQIlmS7kQi9c75sqo0",
   authDomain: "caca-palavras-00093.firebaseapp.com",
   projectId: "caca-palavras-00093",
-  bucket de armazenamento: "caca-palavras-00093.firebasestorage.app",
+  storageBucket: "caca-palavras-00093.firebasestorage.app",
   messagingSenderId: "471520916687",
   appId: "1:471520916687:web:05f2fdb5c8524f3891f3ba"
 };
@@ -27,7 +27,7 @@ window.FIREBASE_CONFIG = {
 *{box-sizing:border-box}
 body{margin:0;font-family:Fredoka,system-ui,sans-serif;background:radial-gradient(circle at 20% 0%,#1e3a8a 0%,var(--bg) 55%);color:var(--txt);min-height:100vh}
 .wrap{max-width:1150px;margin:0 auto;padding:20px}
-cabeçalho{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+header{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
 h1{font-size:2rem;margin:4px 0 2px}
 h1 span{color:var(--acc)}
 h2{margin:0 0 10px}
@@ -39,9 +39,9 @@ h2{margin:0 0 10px}
 label{display:block;font-size:.85rem;color:var(--mut);margin:12px 0 5px}
 input,select{width:100%;padding:11px 13px;border-radius:11px;border:2px solid #334155;background:#0f172a;color:var(--txt);font:inherit;font-size:1rem}
 input:focus,select:focus{outline:none;border-color:var(--acc2)}
-botão{fonte:inherit;peso da fonte:600;borda:0;raio da borda:12px;preenchimento:12px 18px;cursor:ponteiro;tamanho da fonte:1rem;transição:transform .08s,filtro .15s}
-botão:ativo{transform:scale(.97)}
-botão:desativado{opacidade:.5;cursor:padrão}
+button{font:inherit;font-weight:600;border:0;border-radius:12px;padding:12px 18px;cursor:pointer;font-size:1rem;transition:transform .08s,filter .15s}
+button:active{transform:scale(.97)}
+button:disabled{opacity:.5;cursor:default}
 .btn{background:var(--acc);color:#1e1b4b}
 .btn2{background:var(--card2);color:var(--txt)}
 .btnBad{background:var(--bad);color:#450a0a}
@@ -61,7 +61,7 @@ botão:desativado{opacidade:.5;cursor:padrão}
 .phase{font-size:3rem;font-weight:700;color:var(--acc2);line-height:1}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
 .chip{background:var(--card2);border-radius:10px;padding:6px 9px;font-size:.82rem;min-width:62px;text-align:center}
-.chip pequeno{display:block;color:var(--mut);font-size:.7rem}
+.chip small{display:block;color:var(--mut);font-size:.7rem}
 .chip.done{background:#14532d;color:#bbf7d0}
 .chip.next{outline:2px solid var(--acc);color:var(--acc)}
 .chip.run{background:#713f12;color:#fde68a}
@@ -98,7 +98,7 @@ tr.me td{color:var(--acc)}
 </head>
 <body>
 <div class="wrap">
-  <cabeçalho>
+  <header>
     <div>
       <h1>🔎 Caça-Palavras <span>Competição</span></h1>
       <p class="sub" id="subtitle">Resolva as fases o mais rápido possível. Seu tempo vai somando: menor tempo total vence.</p>
@@ -110,10 +110,10 @@ tr.me td{color:var(--acc)}
 
   <section id="noDbSec" class="card hidden">
     <h2>⚠️ Competição indisponível</h2>
-    <p class="msg">O banco de dados ainda não foi configurado ou não foi carregado. Se você é o organizador, colete a configuração do Firebase no início do arquivo (bloco <code>FIREBASE_CONFIG</code>). Se você for um jogador, verifique sua internet e recarregue a página.</p>
+    <p class="msg">O banco de dados ainda não foi configurado ou não carregou. Se você é o organizador, cole a configuração do Firebase no início do arquivo (bloco <code>FIREBASE_CONFIG</code>). Se você é jogador, verifique sua internet e recarregue a página.</p>
   </section>
 
-  <!-- AUTENTICAÇÃO -->
+  <!-- AUTH -->
   <section id="authSec" class="grid2 hidden">
     <div class="card">
       <div class="tabs"><button id="tabLogin" class="on">Entrar</button><button id="tabReg">Criar conta</button></div>
@@ -170,13 +170,13 @@ tr.me td{color:var(--acc)}
           <option value="F">🟢 Fácil em todas as fases (10×10)</option>
           <option value="M">🟡 Médio em todas as fases (12×12)</option>
           <option value="D">🔴 Difícil em todas as fases (15×15)</option>
-          <option value="X">💀 Extremamente difícil em todos (18×18)</option>
+          <option value="X">💀 Extremamente difícil em todas (18×18)</option>
         </select>
         <div class="row" style="margin-top:12px">
           <button class="btn2" id="savePhasesBtn">Salvar configurações</button>
           <button class="btnBad" id="newSeasonBtn">Nova competição</button>
         </div>
-        <p class="msg">"Nova competição" gera fases novas com essas configurações e zera o ranking. As contas continuam.<br>Mudar a dificuldade no meio da competição altera apenas as fases que cada um ainda não jogou.</p>
+        <p class="msg">"Nova competição" gera fases novas com estas configurações e zera o ranking. As contas continuam.<br>Mudar a dificuldade no meio da competição altera só as fases que cada um ainda não jogou.</p>
         <p class="msg">ID da competição atual: <code id="cfgSeason"></code></p>
         </div>
       </div>
@@ -189,7 +189,7 @@ tr.me td{color:var(--acc)}
     </div>
   </section>
 
-  <!-- JOGO -->
+  <!-- GAME -->
   <section id="gameSec" class="hidden">
     <div class="top">
       <div class="row"><span class="tag" id="phaseTag"></span><span class="tag" id="infoTag"></span></div>
@@ -209,36 +209,36 @@ tr.me td{color:var(--acc)}
 <div id="overlay" class="overlay hidden"></div>
 <script>
 const THEMES={
- ANIMAIS:["CACHORRO","GATO","ELEFANTE","GIRAFA","TUCANO","JACARE","CAPIVARA","ONCA","MACACO","CAVALO","CORUJA","GOLFINHO","TARTARUGA","PINGUIM","ZEBRA","LEÃO","TIGRE","COELHO","PAPAGAIO","BALEIA","RAPOSA","LOBO","ARARA","FORMIGA"],
- FRUTAS:["BANANA","ABACAXI","MANGA","GOIABA","LARANJA","MORANGO","UVA","MELANCIA","ACEROLA","CAJU","MARACUJA","PITANGA","LIMÃO","PERA","MAMAO","JABUTICABA","AMORA","KIWI","COCO","CEREJA","ACÁI","GRAVIOLA","AMEIXA","FIGO"],
- PAÍSES: ["BRASIL","PORTUGAL","ARGENTINA","CHILE","PERU","MÉXICO","CANADÁ","FRANÇA","ITÁLIA","ESPANHA","JAPÃO","CHINA","ÍNDIA","EGITO","ANGOLA","URUGAI","GRÉCIA","SUÉCIA","NORUEGA","IRLANDA","COLÔMBIA","MARROCOS","ALEMANHA","RÚSSIA"]
- ESPORTES: ["FUTEBOL","VÔLEI","BASQUETE","TÊNIS","NATAÇÃO","JUDÔ","SURFE","BOXE","CICLISMO","GOLFE","HANDEBOL","XADREZ","ATLETISMO","REMO","ESGRIMA","KARATÊ","SKATE","RÚGBI","BEISEBOL","CANOAGEM","TRIATLO","POLO","VELA","HIPISMO"]
+ ANIMAIS:["CACHORRO","GATO","ELEFANTE","GIRAFA","TUCANO","JACARE","CAPIVARA","ONCA","MACACO","CAVALO","CORUJA","GOLFINHO","TARTARUGA","PINGUIM","ZEBRA","LEAO","TIGRE","COELHO","PAPAGAIO","BALEIA","RAPOSA","LOBO","ARARA","FORMIGA"],
+ FRUTAS:["BANANA","ABACAXI","MANGA","GOIABA","LARANJA","MORANGO","UVA","MELANCIA","ACEROLA","CAJU","MARACUJA","PITANGA","LIMAO","PERA","MAMAO","JABUTICABA","AMORA","KIWI","COCO","CEREJA","ACAI","GRAVIOLA","AMEIXA","FIGO"],
+ PAISES:["BRASIL","PORTUGAL","ARGENTINA","CHILE","PERU","MEXICO","CANADA","FRANCA","ITALIA","ESPANHA","JAPAO","CHINA","INDIA","EGITO","ANGOLA","URUGUAI","GRECIA","SUECIA","NORUEGA","IRLANDA","COLOMBIA","MARROCOS","ALEMANHA","RUSSIA"],
+ ESPORTES:["FUTEBOL","VOLEI","BASQUETE","TENIS","NATACAO","JUDO","SURFE","BOXE","CICLISMO","GOLFE","HANDEBOL","XADREZ","ATLETISMO","REMO","ESGRIMA","KARATE","SKATE","RUGBY","BEISEBOL","CANOAGEM","TRIATLO","POLO","VELA","HIPISMO"],
  COMIDAS:["FEIJOADA","COXINHA","PASTEL","BRIGADEIRO","PAMONHA","TAPIOCA","MOQUECA","ACARAJE","EMPADA","LASANHA","PIZZA","CHURRASCO","FAROFA","PUDIM","BOLO","SUSHI","ESTROGONOFE","QUINDIM","CUSCUZ","VATAPA","ESFIHA","MINGAU","PIPOCA","BAIAO"],
- PROFESSORES: ["MÉDICO","ADVOGADO","ENGENHEIRO","PROFESSOR","PILOTO","BOMBEIRO","DENTISTA","PADEIRO","CARTEIRO","JORNALISTA","ARQUITETO","MOTORISTA","CONTADOR","VETERINÁRIO","PEDREIRO","COZINHEIRO","PINTOR","ATOR","MÚSICO","CIENTISTA","AGRONÔMICO","FARMACÊUTICO","ELETRICISTA","GARCOM"]
+ PROFISSOES:["MEDICO","ADVOGADO","ENGENHEIRO","PROFESSOR","PILOTO","BOMBEIRO","DENTISTA","PADEIRO","CARTEIRO","JORNALISTA","ARQUITETO","MOTORISTA","CONTADOR","VETERINARIO","PEDREIRO","COZINHEIRO","PINTOR","ATOR","MUSICO","CIENTISTA","AGRONOMO","FARMACEUTICO","ELETRICISTA","GARCOM"]
 };
-const DIFF={F:{n:10,w:6,dirs:[[0,1],[1,0]],label:"Fácil"},M:{n:12,w:8,dirs:[[0,1],[1,0],[1,1],[-1,1]],label:"Médio"},D:{n:15,w:10,dirs:[[0,1],[1,0],[1,1],[-1,1],[0,-1],[-1,0],[-1,-1],[1,-1]],label:"Difícil"},X:{n:18,w:14,dirs:[[0,1],[1,0],[1,1],[-1,1],[0,-1],[-1,0],[-1,-1],[1,-1]],label:"Extremamente difícil",isca:verdadeiro}};
+const DIFF={F:{n:10,w:6,dirs:[[0,1],[1,0]],label:"Fácil"},M:{n:12,w:8,dirs:[[0,1],[1,0],[1,1],[-1,1]],label:"Médio"},D:{n:15,w:10,dirs:[[0,1],[1,0],[1,1],[-1,1],[0,-1],[-1,0],[-1,-1],[1,-1]],label:"Difícil"},X:{n:18,w:14,dirs:[[0,1],[1,0],[1,1],[-1,1],[0,-1],[-1,0],[-1,-1],[1,-1]],label:"Extremamente difícil",decoy:true}};
 const COLORS=["#fca5a5","#fdba74","#fde047","#86efac","#67e8f9","#a5b4fc","#f0abfc","#fda4af","#bef264","#5eead4","#c4b5fd","#fcd34d"];
-// RNG inicializado
+// seeded rng
 function hash(s){let h=1779033703^s.length;for(let i=0;i<s.length;i++){h=Math.imul(h^s.charCodeAt(i),3432918353);h=h<<13|h>>>19}return()=>{h=Math.imul(h^h>>>16,2246822507);h=Math.imul(h^h>>>13,3266489909);return(h^=h>>>16)>>>0}}
-função mulberry(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let ​​t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function mulberry(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 
-função construirQuebra-cabeça(p){
-  const rnd=mulberry(hash(p.code)());const d=DIFF[p.diff];const n=dn;
+function buildPuzzle(p){
+  const rnd=mulberry(hash(p.code)());const d=DIFF[p.diff];const n=d.n;
   for(let attempt=0;attempt<60;attempt++){
     const pool=THEMES[p.theme].filter(w=>w.length<=n).slice();
     for(let i=pool.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]]}
     const g=Array.from({length:n},()=>Array(n).fill(""));const placed=[];
-    para(constante w de pool){se(colocado.comprimento>=dw)interrompa;
+    for(const w of pool){if(placed.length>=d.w)break;
       let ok=false;
       for(let t=0;t<200&&!ok;t++){const [dr,dc]=d.dirs[Math.floor(rnd()*d.dirs.length)];const r=Math.floor(rnd()*n),c=Math.floor(rnd()*n);
         const er=r+dr*(w.length-1),ec=c+dc*(w.length-1);if(er<0||er>=n||ec<0||ec>=n)continue;
-        seja fit=true;for(let k=0;k<w.length;k++){const x=g[r+dr*k][c+dc*k];if(x&&x!==w[k]){fit=false;break}}
+        let fit=true;for(let k=0;k<w.length;k++){const x=g[r+dr*k][c+dc*k];if(x&&x!==w[k]){fit=false;break}}
         if(!fit)continue;const cells=[];for(let k=0;k<w.length;k++){g[r+dr*k][c+dc*k]=w[k];cells.push([r+dr*k,c+dc*k])}
         placed.push({w,cells});ok=true}
     }
-    if(placed.length<dw)continue;
+    if(placed.length<d.w)continue;
     const L="ABCDEFGHIJLMNOPQRSTUVXZ";
-    if(d.decoy){ // iscas: pedaços das palavras espalhadas para confundir
+    if(d.decoy){ // iscas: pedaços das palavras espalhados para confundir
       const all=THEMES[p.theme];
       for(let t=0;t<n*6;t++){const w=all[Math.floor(rnd()*all.length)];const len=3+Math.floor(rnd()*Math.min(3,w.length-3));const frag=w.slice(0,len);
         const [dr,dc]=d.dirs[Math.floor(rnd()*d.dirs.length)];const r=Math.floor(rnd()*n),c=Math.floor(rnd()*n);
@@ -248,7 +248,7 @@ função construirQuebra-cabeça(p){
       for(let r=0;r<n;r++)for(let c=0;c<n;c++)if(g[r][c]&&g[r][c]!==g[r][c].toUpperCase())g[r][c]=g[r][c].toUpperCase();
     }
     for(let r=0;r<n;r++)for(let c=0;c<n;c++)if(!g[r][c])g[r][c]=L[Math.floor(rnd()*L.length)];
-    placed.sort((a,b)=>awlocaleCompare(bw));
+    placed.sort((a,b)=>a.w.localeCompare(b.w));
     return{g,n,words:placed};
   }
 }
@@ -257,15 +257,15 @@ const $=id=>document.getElementById(id);
 const DEFAULT_CFG={season:"s1",phases:10};
 const S={db:null,skew:0,cfg:{...DEFAULT_CFG},me:null,runs:[],unsubRuns:null,game:null,regMode:false,isOwner:false};
 
-// ---------- auxiliares ----------
+// ---------- helpers ----------
 const dataOf=d=>d==null?null:(typeof d.data==="function"?d.data({serverTimestamps:"estimate"}):d);
 const toMs=t=>t==null?null:typeof t.toMillis==="function"?t.toMillis():typeof t==="number"?t:null;
-const runMs=r=>{const a=toMs(r.startedAt),b=toMs(r.finishedAt);return a!=null&&b!=null?ba:null};
+const runMs=r=>{const a=toMs(r.startedAt),b=toMs(r.finishedAt);return a!=null&&b!=null?b-a:null};
 const TS=()=>firebase.firestore.FieldValue.serverTimestamp();
 const existsOf=d=>{if(!d)return false;if(typeof d.exists==="function")return d.exists();if(typeof d.exists==="boolean")return d.exists;return dataOf(d)!=null};
-função assíncrona getDoc(p){const s=await S.db.doc(p).get();return existsOf(s)?dataOf(s):null}
-função assíncrona setDoc(p,v){aguarde S.db.doc(p).set(v)}
-função assíncrona updDoc(p,v){const r=S.db.doc(p);if(typeof r.update==="function")await r.update(v);else{const o=await getDoc(p);await r.set({...(o||{}),...v})}}
+async function getDoc(p){const s=await S.db.doc(p).get();return existsOf(s)?dataOf(s):null}
+async function setDoc(p,v){await S.db.doc(p).set(v)}
+async function updDoc(p,v){const r=S.db.doc(p);if(typeof r.update==="function")await r.update(v);else{const o=await getDoc(p);await r.set({...(o||{}),...v})}}
 function docsOf(snap){const out=[];const arr=snap&&(snap.docs||snap);if(arr&&arr.forEach)arr.forEach(d=>{const v=dataOf(d);if(v)out.push(v)});return out}
 function fmt(ms){ms=Math.max(0,ms||0);const h=Math.floor(ms/3600000),m=Math.floor(ms/60000)%60,s=Math.floor(ms/1000)%60,d=Math.floor(ms/100)%10;const p=n=>String(n).padStart(2,"0");return(h?h+":"+p(m):p(m))+":"+p(s)+"."+d}
 function esc(s){const d=document.createElement("span");d.textContent=s==null?"":String(s);return d.innerHTML}
@@ -275,7 +275,7 @@ const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const lsSet=(k,v)=>{try{v==null?localStorage.removeItem(k):localStorage.setItem(k,v)}catch(e){}};
 const keyOf=n=>n.trim().toLowerCase();
 
-função assíncrona hashPass(pass,saltHex){
+async function hashPass(pass,saltHex){
   const enc=new TextEncoder();const salt=saltHex?new Uint8Array(saltHex.match(/../g).map(h=>parseInt(h,16))):crypto.getRandomValues(new Uint8Array(16));
   const k=await crypto.subtle.importKey("raw",enc.encode(pass),"PBKDF2",false,["deriveBits"]);
   const bits=await crypto.subtle.deriveBits({name:"PBKDF2",salt,iterations:120000,hash:"SHA-256"},k,256);
@@ -283,26 +283,26 @@ função assíncrona hashPass(pass,saltHex){
   return{salt:hex(salt),hash:hex(bits)};
 }
 
-// ---------- fases ----------
+// ---------- phases ----------
 const THEME_KEYS=Object.keys(THEMES);
-função phaseSpec(phase){
+function phaseSpec(phase){
   const code=`${S.cfg.season}-F${phase}`;const r=hash(code)();
   const theme=THEME_KEYS[r%THEME_KEYS.length];return{code,theme,diff:diffFor(phase)};
 }
-// modo: "C" crescente, "F" fácil, "M" médio, "D" difícil, "X" extremamente (sem modo = regra antiga)
-função diffFor(phase){
+// modo: "C" crescente, "F" fácil, "M" médio, "D" difícil, "X" extremamente difícil (sem modo = regra antiga)
+function diffFor(phase){
   const m=S.cfg.mode,N=S.cfg.phases;
   if(m==="F"||m==="M"||m==="D"||m==="X")return m;
   if(m==="C"){const f=phase/N;return f<=0.3?"F":f<=0.6?"M":f<=0.85?"D":"X"}
-  retornar fase<=3?"F":fase<=7?"M":"D";
+  return phase<=3?"F":phase<=7?"M":"D";
 }
 const DLABEL={F:"Fácil",M:"Médio",D:"Difícil",X:"Extremamente difícil"};
 const MLABEL={C:"Crescente",F:"Fácil",M:"Médio",D:"Difícil",X:"Extremamente difícil"};
 const modeOf=()=>S.cfg.mode||"C";
-const TNAMES={ANIMAIS:"Animais",FRUTAS:"Frutas",PAISES:"Paises",ESPORTES:"Esportes",COMIDAS:"Comidas",PROFISSOES:"Profissões"};
+const TNAMES={ANIMAIS:"Animais",FRUTAS:"Frutas",PAISES:"Países",ESPORTES:"Esportes",COMIDAS:"Comidas",PROFISSOES:"Profissões"};
 const cap=t=>TNAMES[t]||t;
 
-// ---------- bota ----------
+// ---------- boot ----------
 (async()=>{
   const cfgOk=window.FIREBASE_CONFIG&&FIREBASE_CONFIG.projectId&&!/COLE/.test(FIREBASE_CONFIG.projectId);
   if(!cfgOk||!window.firebase){show("noDbSec");return}
@@ -315,17 +315,17 @@ const cap=t=>TNAMES[t]||t;
 
 async function loadConfig(){try{const c=await getDoc("config/main");if(c&&c.season)S.cfg={...DEFAULT_CFG,...c}}catch(e){} subscribeRuns()}
 // só aceita a configuração confirmada pelo servidor
-função applyServerCfg(c){
+function applyServerCfg(c){
   const n=(c&&c.season)?{...DEFAULT_CFG,...c}:{...DEFAULT_CFG};
   if(n.season!==S.cfg.season||n.phases!==S.cfg.phases||n.mode!==S.cfg.mode){const changed=n.season!==S.cfg.season;S.cfg=n;if(changed)subscribeRuns();renderAll()}
 }
-função assíncrona recarregarServerCfg(){try{const s=await S.db.doc("config/main").get({source:"server"});applyServerCfg(existsOf(s)?dataOf(s):null)}catch(e){}}
-função watchConfig(){
+async function reloadServerCfg(){try{const s=await S.db.doc("config/main").get({source:"server"});applyServerCfg(existsOf(s)?dataOf(s):null)}catch(e){}}
+function watchConfig(){
   const ref=S.db.doc("config/main");
   if(typeof ref.onSnapshot==="function"){try{ref.onSnapshot(s=>{if(s.metadata&&s.metadata.hasPendingWrites)return;applyServerCfg(existsOf(s)?dataOf(s):null)},()=>{});return}catch(e){}}
   setInterval(async()=>{try{applyServerCfg(await getDoc("config/main"))}catch(e){}},15000);
 }
-função subscribeRuns(){
+function subscribeRuns(){
   if(S.unsubRuns){try{S.unsubRuns()}catch(e){}S.unsubRuns=null}
   S.runs=[];renderAll();const season=S.cfg.season;
   try{S.unsubRuns=S.db.collection("runs").where("season","==",season).onSnapshot(snap=>{S.runs=docsOf(snap).filter(r=>r.season===season);renderAll()},err=>console.warn(err))}
@@ -333,7 +333,7 @@ função subscribeRuns(){
 }
 
 // ---------- auth ----------
-function setMode(reg){S.regMode=reg;$("tabLogin").classList.toggle("on",!reg);$("tabReg").classList.toggle("on",reg);$("pass2Wrap").classList.toggle("hidden",!reg);$("authBtn").textContent=reg?""Criar conta":"Entrar";$("uPass").autocomplete=reg?""new-password":"current-password";$("authErr").textContent=""}
+function setMode(reg){S.regMode=reg;$("tabLogin").classList.toggle("on",!reg);$("tabReg").classList.toggle("on",reg);$("pass2Wrap").classList.toggle("hidden",!reg);$("authBtn").textContent=reg?"Criar conta":"Entrar";$("uPass").autocomplete=reg?"new-password":"current-password";$("authErr").textContent=""}
 $("tabLogin").onclick=()=>setMode(false);$("tabReg").onclick=()=>setMode(true);
 $("authForm").addEventListener("submit",async e=>{
   e.preventDefault();const err=$("authErr");err.textContent="";
@@ -341,14 +341,14 @@ $("authForm").addEventListener("submit",async e=>{
   if(!/^[a-zA-Z0-9_.\-]{3,20}$/.test(name)){err.textContent="Usuário: 3 a 20 caracteres (letras, números, _ . -), sem espaços.";return}
   if(pass.length<4){err.textContent="A senha precisa ter pelo menos 4 caracteres.";return}
   $("authBtn").disabled=true;
-  tente{
+  try{
     const acc=await getDoc("accounts/"+key);
     if(S.regMode){
-      if(pass!==$("uPass2").value){err.textContent="As senhas não conferênciam.";return}
+      if(pass!==$("uPass2").value){err.textContent="As senhas não conferem.";return}
       if(acc){err.textContent="Esse nome de usuário já existe. Escolha outro.";return}
       const h=await hashPass(pass);
       await setDoc("accounts/"+key,{username:name,salt:h.salt,hash:h.hash,createdAt:Date.now()});
-      S.me={key,nome};toast("Conta criada! Bem-vindo, "+nome);
+      S.me={key,name};toast("Conta criada! Bem-vindo, "+name);
     }else{
       if(!acc){err.textContent="Usuário não encontrado.";return}
       const h=await hashPass(pass,acc.salt);
@@ -361,29 +361,29 @@ $("authForm").addEventListener("submit",async e=>{
 });
 $("logoutBtn").onclick=()=>{S.me=null;lsSet("cp_user",null);setMode(false);show("authSec");renderAll()};
 
-// ---------- classificação ----------
-função standings(){
+// ---------- ranking ----------
+function standings(){
   const m={};const now=Date.now();
   for(const r of S.runs){if(!r.user)continue;const u=m[r.user]||(m[r.user]={key:r.user,name:r.name||r.user,done:0,total:0,playing:null});
     const ms=runMs(r);if(r.done&&ms!=null&&r.phase<=S.cfg.phases){u.done++;u.total+=ms}
     else if(!r.done&&now+S.skew-(toMs(r.startedAt)||0)<3*3600000)u.playing=r.phase}
   return Object.values(m).sort((a,b)=>b.done-a.done||a.total-b.total||a.name.localeCompare(b.name));
 }
-função rankHTML(){
+function rankHTML(){
   const l=standings();if(!l.length)return'<p class="msg">Ninguém jogou ainda. Seja o primeiro!</p>';
   const md=["🥇","🥈","🥉"],N=S.cfg.phases;
   return`<table><tr><th>#</th><th>Jogador</th><th class="t">Fases</th><th class="t">Tempo total</th><th class="t">Média</th></tr>`+
    l.map((u,i)=>`<tr class="${S.me&&u.key===S.me.key?"me":""}"><td class="medal">${md[i]||i+1}</td><td>${esc(u.name)}${u.playing?` <span class="tag">jogando fase ${u.playing}<span class="live"></span></span>`:""}${u.done>=N?" 🏁":""}</td><td class="t">${u.done}/${N}</td><td class="t">${fmt(u.total)}</td><td class="t">${u.done?fmt(u.total/u.done):"—"}</td></tr>`).join("")+"</table>";
 }
 function myRuns(){const m={};if(S.me)for(const r of S.runs)if(r.user===S.me.key)m[r.phase]=r;return m}
-função próximaFase(){const m=myRuns();for(let p=1;p<=S.cfg.phases;p++){if(!m[p]||!m[p].done)return p}return null}
-função renderAll(){
-  const h=rankHTML();$("rankHome").innerHTML=h;$("authRank").innerHTML="<b>🏆 Classificação atual</b>"+h;
+function nextPhase(){const m=myRuns();for(let p=1;p<=S.cfg.phases;p++){if(!m[p]||!m[p].done)return p}return null}
+function renderAll(){
+  const h=rankHTML();$("rankHome").innerHTML=h;$("authRank").innerHTML="<b>🏆 Ranking atual</b>"+h;
   if(!S.me)return;
   const m=myRuns(),np=nextPhase(),N=S.cfg.phases;let total=0;
   const chips=[];for(let p=1;p<=N;p++){const r=m[p];if(r&&r.done&&runMs(r)!=null){total+=runMs(r);chips.push(`<div class="chip done">F${p}<small>${fmt(runMs(r))}</small></div>`)}
-    senão se(r){chips.push(`<div class="chip run">F${p}<small>em andamento</small></div>`)}
-    senão chips.push(`<div class="chip ${p===np?"next":""}">F${p}<small>${p===np?"próxima":"—"}</small></div>`)}
+    else if(r){chips.push(`<div class="chip run">F${p}<small>em andamento</small></div>`)}
+    else chips.push(`<div class="chip ${p===np?"next":""}">F${p}<small>${p===np?"próxima":"—"}</small></div>`)}
   $("myChips").innerHTML=chips.join("");$("myTotal").textContent=fmt(total);
   if(np){const sp=phaseSpec(np);const running=m[np]&&!m[np].done;
     $("nextLabel").textContent=running?"Fase em andamento!":"Sua próxima fase";$("nextPhase").textContent=`Fase ${np} de ${N}`;
@@ -396,8 +396,8 @@ função renderAll(){
 }
 function enterHome(){$("userName").textContent=S.me.name;show("homeSec");renderAll()}
 
-// ---------- organizador ----------
-função assíncrona writeConfig(cfg){
+// ---------- organizer ----------
+async function writeConfig(cfg){
   const key=$("adminPass").value;if(!key){toast("Digite a senha do organizador",true);throw new Error("nokey")}
   const b=S.db.batch();b.set(S.db.doc("config/secret"),{key,at:Date.now()});b.set(S.db.doc("config/main"),cfg);await b.commit();
 }
@@ -406,44 +406,44 @@ $("savePhasesBtn").onclick=async()=>{const f=formCfg();try{const c={...S.cfg,...
 $("newSeasonBtn").onclick=()=>{
   if(!$("adminPass").value){toast("Digite a senha do organizador",true);return}
   const ov=$("overlay");ov.classList.remove("hidden");
-  ov.innerHTML=`<div class="dialog"><h2>Nova competição?</h2><p class="msg">Isso gera fases novas e zero o ranking para todos. As contas continuam.</p><div class="row" style="justify-content:center;margin-top:14px"><button class="btn2" id="dlgNo">Cancelar</button><button class="btnBad" id="dlgYes">Sim, começar</button></div></div>`;
+  ov.innerHTML=`<div class="dialog"><h2>Nova competição?</h2><p class="msg">Isso gera fases novas e zera o ranking para todos. As contas continuam.</p><div class="row" style="justify-content:center;margin-top:14px"><button class="btn2" id="dlgNo">Cancelar</button><button class="btnBad" id="dlgYes">Sim, começar</button></div></div>`;
   $("dlgNo").onclick=()=>ov.classList.add("hidden");
   $("dlgYes").onclick=async()=>{const f=formCfg();const season="s"+Date.now().toString(36);
     try{const c={season,...f,startedAt:Date.now()};await writeConfig(c);ov.classList.add("hidden");applyServerCfg(c);toast("Nova competição iniciada para todos!")}catch(e){ov.classList.add("hidden");await reloadServerCfg();orgError()}};
 };
-function orgError(){const ov=$("overlay");ov.classList.remove("hidden");ov.innerHTML=`<div class="dialog"><h2>❌ Não foi salva</h2><p class="msg">A senha do organizador não confere com a que está nas <b>regras</b> do Firebase (função <code>adminKey</code>). Nada foi alterado para os jogadores.</p><button class="btn" id="dlgOk" style="margin-top:12px">Entendi</button></div>`;$("dlgOk").onclick=()=>ov.classList.add("hidden")}
+function orgError(){const ov=$("overlay");ov.classList.remove("hidden");ov.innerHTML=`<div class="dialog"><h2>❌ Não foi salvo</h2><p class="msg">A senha do organizador não confere com a que está nas <b>Regras</b> do Firebase (função <code>adminKey</code>). Nada foi alterado para os jogadores.</p><button class="btn" id="dlgOk" style="margin-top:12px">Entendi</button></div>`;$("dlgOk").onclick=()=>ov.classList.add("hidden")}
 $("orgToggle").onclick=()=>$("orgBody").classList.toggle("hidden");
 
-// ---------- jogo ----------
+// ---------- game ----------
 const runId=p=>`${S.cfg.season}__${S.me.key}__${p}`;
 $("playBtn").onclick=()=>{const p=nextPhase();if(p)startPhase(p)};
-função assíncrona iniciarFase(fase){
+async function startPhase(phase){
   const sp=phaseSpec(phase);const puz=buildPuzzle(sp);
   S.game={phase,sp,puz,found:new Set(),startedAt:null,timer:null,finished:false};
   $("phaseTag").textContent=`Fase ${phase} de ${S.cfg.phases}`;$("infoTag").textContent=`${cap(sp.theme)} · ${DLABEL[sp.diff]}`;
   $("timer").textContent="00:00.0";drawBoard(true);drawWords();show("gameSec");
   let existing=null;try{existing=await getDoc("runs/"+runId(phase))}catch(e){}
   const ov=$("overlay");ov.classList.remove("hidden");
-  if(existente&&existente.done){ov.classList.add("hidden");toast("Você já concluiu essa fase",true);enterHome();return}
-  if(existente){ov.innerHTML=`<div class="count" style="font-size:3rem">Retomando…</div><div class="msg">O cronômetro contínuo contando desde que você começou.</div>`;
+  if(existing&&existing.done){ov.classList.add("hidden");toast("Você já concluiu essa fase",true);enterHome();return}
+  if(existing){ov.innerHTML=`<div class="count" style="font-size:3rem">Retomando…</div><div class="msg">O cronômetro continuou contando desde que você começou.</div>`;
     const sk=parseFloat(lsGet("cp_skew")||"0");S.skew=isNaN(sk)?0:sk;setTimeout(()=>{ov.classList.add("hidden");begin(toMs(existing.startedAt))},1200);return}
   let n=3;const step=async()=>{
     if(n>0){ov.innerHTML=`<div class="count">${n}</div><div class="msg">Fase ${phase} · prepare-se, ${esc(S.me.name)}!</div>`;n--;setTimeout(step,900);return}
     let startedAt;
     try{const t0=Date.now();await setDoc("runs/"+runId(phase),{season:S.cfg.season,user:S.me.key,name:S.me.name,phase,startedAt:TS(),done:false});
-      const t1 = Date.now(); const d = await getDoc("runs/" + runId(phase)); startedAt = toMs(d && d.startedAt) || t0; S.skew = startedAt - (t0 + t1) / 2; lsSet("cp_skew", String(S.skew))}
+      const t1=Date.now();const d=await getDoc("runs/"+runId(phase));startedAt=toMs(d&&d.startedAt)||t0;S.skew=startedAt-(t0+t1)/2;lsSet("cp_skew",String(S.skew))}
     catch(e){console.warn(e);ov.classList.add("hidden");toast("Não foi possível registrar a partida. Verifique a internet.",true);enterHome();return}
     ov.classList.add("hidden");begin(startedAt)};
-  passo();
+  step();
 }
 function begin(startedAt){const g=S.game;g.startedAt=startedAt;drawBoard(false);clearInterval(g.timer);g.timer=setInterval(()=>{$("timer").textContent=fmt(Date.now()+S.skew-g.startedAt)},50)}
-função drawBoard(hide){
+function drawBoard(hide){
   const g=S.game,b=$("board"),{n}=g.puz;const cs=Math.max(22,Math.min(46,Math.floor(Math.min(window.innerWidth-60,760)/n)-4));
   b.style.setProperty("--cs",cs+"px");b.style.gridTemplateColumns=`repeat(${n},var(--cs))`;b.innerHTML="";
   for(let r=0;r<n;r++)for(let c=0;c<n;c++){const d=document.createElement("div");d.className="cell";d.dataset.r=r;d.dataset.c=c;d.textContent=hide?"":g.puz.g[r][c];b.appendChild(d)}
-  g.puz.words.forEach((w,i)=>{if(g.found.has(ww))paint(w.cells,COLORS[i%COLORS.length])});
+  g.puz.words.forEach((w,i)=>{if(g.found.has(w.w))paint(w.cells,COLORS[i%COLORS.length])});
 }
-function drawWords(){const g=S.game,ul=$("wordList");ul.innerHTML="";g.puz.words.forEach(w=>{const li=document.createElement("li");li.textContent=ww;if(g.found.has(ww))li.className="done";ul.appendChild(li)});
+function drawWords(){const g=S.game,ul=$("wordList");ul.innerHTML="";g.puz.words.forEach(w=>{const li=document.createElement("li");li.textContent=w.w;if(g.found.has(w.w))li.className="done";ul.appendChild(li)});
   const t=g.puz.words.length,f=g.found.size;$("cnt").textContent=`${f}/${t}`;$("progBar").style.width=(f/t*100)+"%"}
 const cellAt=(r,c)=>$("board").children[r*S.game.puz.n+c];
 function paint(cells,col){cells.forEach(([r,c])=>{const e=cellAt(r,c);e.classList.add("found");e.style.background=col})}
@@ -454,14 +454,14 @@ function cellFromEvent(e){const el=document.elementFromPoint(e.clientX,e.clientY
 $("board").addEventListener("pointerdown",e=>{const g=S.game;if(!g||!g.startedAt||g.finished)return;const c=cellFromEvent(e);if(!c)return;sel={a:c,cells:[c]};clearSel();cellAt(...c).classList.add("sel");e.preventDefault()});
 window.addEventListener("pointermove",e=>{if(!sel)return;const c=cellFromEvent(e);if(!c)return;const l=lineCells(sel.a,c);if(!l)return;sel.cells=l;clearSel();l.forEach(x=>cellAt(...x).classList.add("sel"))});
 window.addEventListener("pointerup",()=>{if(!sel)return;const cells=sel.cells;sel=null;clearSel();check(cells)});
-função verificar(células){
+function check(cells){
   const g=S.game,k2=cells.map(x=>x.join(",")).join("|"),k3=[...cells].reverse().map(x=>x.join(",")).join("|");
   const str=cells.map(([r,c])=>g.puz.g[r][c]).join(""),rev=[...str].reverse().join("");
-  g.puz.words.forEach((w,i)=>{if(g.found.has(ww))return;const key=w.cells.map(x=>x.join(",")).join("|");
-    if(key!==k2&&key!==k3&&cells.length===wwlength&&(str===ww||rev===ww))w.cells=cells; // mesma palavra em outro lugar também vale
-    if(w.cells===cells||key===k2||key===k3){g.found.add(ww);paint(w.cells,COLORS[i%COLORS.length]);drawWords();if(g.found.size===g.puz.words.length)finish()}});
+  g.puz.words.forEach((w,i)=>{if(g.found.has(w.w))return;const key=w.cells.map(x=>x.join(",")).join("|");
+    if(key!==k2&&key!==k3&&cells.length===w.w.length&&(str===w.w||rev===w.w))w.cells=cells; // mesma palavra em outro lugar também vale
+    if(w.cells===cells||key===k2||key===k3){g.found.add(w.w);paint(w.cells,COLORS[i%COLORS.length]);drawWords();if(g.found.size===g.puz.words.length)finish()}});
 }
-função assíncrona finish(){
+async function finish(){
   const g=S.game;g.finished=true;clearInterval(g.timer);let ms=Date.now()+S.skew-g.startedAt;$("timer").textContent=fmt(ms);
   let saved=false;
   for(let i=0;i<3;i++){try{await updDoc("runs/"+runId(g.phase),{done:true,finishedAt:TS()});saved=true;break}catch(e){console.warn(e);await new Promise(r=>setTimeout(r,800))}}
