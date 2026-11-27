@@ -608,13 +608,10 @@ const Grenade=(()=>{
   return{
     setup(g){const el=$("grenTag");el.classList.add("hidden");g.grenadeArmed=false;g.grenadeDone=false;g.locked=false;
       if(modeOf()!=="G")return;const avg=myAvg(g.phase);
-      if(avg==null){setTag("💣 Granada: jogue esta fase para calcular sua média",false);return}
-      if(avg<LIMIT){g.grenadeArmed=true;setTag(`💣 Granada ARMADA (sua média ${fmt(avg)}). Ela cai em 1:00!`,true);
-        const ms=Date.now()+S.skew-g.startedAt;if(ms>=FUSE)explode(g,false)}
-      else setTag(`🧯 Granada desarmada (sua média ${fmt(avg)})`,false)},
+      if(avg!=null&&avg<LIMIT){g.grenadeArmed=true; // sem aviso: a granada é surpresa
+        const ms=Date.now()+S.skew-g.startedAt;if(ms>=FUSE)explode(g,false)}},
     tick(g,ms){if(!g.grenadeArmed||g.grenadeDone||g.finished)return;const left=FUSE-ms;
-      if(left<=0){explode(g,true);return}
-      if(left<=10000){const el=$("grenTag");el.textContent=`💣 ${Math.ceil(left/1000)}…`;el.classList.add("hot")}},
+      if(left<=0)explode(g,true)},
     clear(){const el=$("grenTag");if(el)el.classList.add("hidden");["grenade","explosion"].forEach(i=>$(i)&&$(i).classList.add("hidden"));document.body.classList.remove("shake")}
   };
 })();
