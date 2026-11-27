@@ -112,6 +112,13 @@ body.horror #board{background:#0a0606}
 .timer.glitch{color:#fff!important;transform:skewX(-12deg);text-shadow:3px 0 #f00,-3px 0 #0ff}
 body.shake .wrap{animation:shake .45s linear 2}
 @keyframes shake{0%,100%{transform:translate(0)}20%{transform:translate(-8px,4px)}40%{transform:translate(7px,-5px)}60%{transform:translate(-6px,-3px)}80%{transform:translate(5px,6px)}}
+#grenTag.hot{background:#7f1d1d;color:#fecaca;animation:blink 1s infinite}
+#grenade{position:fixed;top:-100px;z-index:25;pointer-events:none}
+#grenade.drop{animation:gdrop 1s cubic-bezier(.5,0,1,1) forwards}
+@keyframes gdrop{0%{top:-100px;transform:rotate(0)}80%{top:var(--land);transform:rotate(540deg)}90%{top:calc(var(--land) - 30px);transform:rotate(600deg)}100%{top:var(--land);transform:rotate(640deg)}}
+#explosion{position:fixed;width:20px;height:20px;margin:-10px 0 0 -10px;border-radius:50%;z-index:26;pointer-events:none;background:radial-gradient(circle,#fff 0%,#fde047 20%,#f97316 45%,#b91c1c 70%,transparent 72%);filter:blur(3px)}
+#explosion.go{animation:boom 1s ease-out forwards}
+@keyframes boom{0%{transform:scale(1);opacity:1}40%{transform:scale(70);opacity:1}100%{transform:scale(90);opacity:0}}
 .loading{text-align:center;padding:60px 20px;color:var(--mut)}
 </style>
 </head>
@@ -186,6 +193,7 @@ body.shake .wrap{animation:shake .45s linear 2}
         <label>Dificuldade</label>
         <select id="cfgMode">
           <option value="C">📈 Crescente (fácil → extremamente difícil)</option>
+          <option value="G">💣 Granada (crescente + granada para quem tem média abaixo de 1:30)</option>
           <option value="F">🟢 Fácil em todas as fases (10×10)</option>
           <option value="M">🟡 Médio em todas as fases (12×12)</option>
           <option value="D">🔴 Difícil em todas as fases (15×15)</option>
@@ -212,7 +220,7 @@ body.shake .wrap{animation:shake .45s linear 2}
   <!-- GAME -->
   <section id="gameSec" class="hidden">
     <div class="top">
-      <div class="row"><span class="tag" id="phaseTag"></span><span class="tag" id="infoTag"></span></div>
+      <div class="row"><span class="tag" id="phaseTag"></span><span class="tag" id="infoTag"></span><span class="tag hidden" id="grenTag"></span></div>
       <div class="timer" id="timer">00:00.0</div>
       <button class="btn2" id="backBtn">Voltar (o tempo continua)</button>
     </div>
@@ -228,6 +236,8 @@ body.shake .wrap{animation:shake .45s linear 2}
 </div>
 <div id="overlay" class="overlay hidden"></div>
 <div id="hFog" class="hidden"></div><div id="hGhost" class="hidden"></div><div id="hWhisper" class="hidden"></div>
+<div id="grenade" class="hidden"><svg viewBox="0 0 80 80" width="80" height="80"><rect x="30" y="6" width="20" height="12" rx="3" fill="#71717a"/><circle cx="56" cy="12" r="7" fill="none" stroke="#d4d4d8" stroke-width="3"/><path d="M50 14 L62 22" stroke="#d4d4d8" stroke-width="3"/><ellipse cx="40" cy="48" rx="24" ry="28" fill="#3f6212"/><path d="M18 40h44M18 52h44M28 22v52M40 20v56M52 22v52" stroke="#1a2e05" stroke-width="2.5" opacity=".7"/><ellipse cx="32" cy="38" rx="6" ry="9" fill="#84cc16" opacity=".35"/></svg></div>
+<div id="explosion" class="hidden"></div>
 <button id="hMute" class="hidden" title="Som">🔊</button><div id="hScare" class="hidden"></div>
 <script>
 const THEMES={
@@ -348,11 +358,11 @@ function phaseSpec(phase){
 function diffFor(phase){
   const m=S.cfg.mode,N=S.cfg.phases;
   if(m==="F"||m==="M"||m==="D"||m==="X"||m==="I")return m;
-  if(m==="C"){const f=phase/N;return f<=0.3?"F":f<=0.6?"M":f<=0.85?"D":"X"}
+  if(m==="C"||m==="G"){const f=phase/N;return f<=0.3?"F":f<=0.6?"M":f<=0.85?"D":"X"}
   return phase<=3?"F":phase<=7?"M":"D";
 }
 const DLABEL={F:"Fácil",M:"Médio",D:"Difícil",X:"Extremamente difícil",I:"☠️ Impossível"};
-const MLABEL={C:"Crescente",F:"Fácil",M:"Médio",D:"Difícil",X:"Extremamente difícil",I:"☠️ Impossível"};
+const MLABEL={C:"Crescente",G:"💣 Granada (crescente)",F:"Fácil",M:"Médio",D:"Difícil",X:"Extremamente difícil",I:"☠️ Impossível"};
 const modeOf=()=>S.cfg.mode||"C";
 const TNAMES={ANIMAIS:"Animais",FRUTAS:"Frutas",PAISES:"Países",ESPORTES:"Esportes",COMIDAS:"Comidas",PROFISSOES:"Profissões"};
 const cap=t=>TNAMES[t]||t;
@@ -493,7 +503,8 @@ async function startPhase(phase){
 }
 function begin(startedAt){const g=S.game;g.startedAt=startedAt;drawBoard(false);clearInterval(g.timer);
   const horror=g.sp.diff==="I";if(horror)Horror.start();
-  g.timer=setInterval(()=>{const t=fmt(Date.now()+S.skew-g.startedAt);if(!horror||!Horror.glitching)$("timer").textContent=t},50)}
+  Grenade.setup(g);
+  g.timer=setInterval(()=>{const ms=Date.now()+S.skew-g.startedAt;const t=fmt(ms);if(!horror||!Horror.glitching)$("timer").textContent=t;Grenade.tick(g,ms)},50)}
 function drawBoard(hide){
   const g=S.game,b=$("board"),{n}=g.puz;const cs=Math.max(22,Math.min(46,Math.floor(Math.min(window.innerWidth-60,760)/n)-4));
   b.style.setProperty("--cs",cs+"px");b.style.gridTemplateColumns=`repeat(${n},var(--cs))`;b.innerHTML="";
@@ -508,7 +519,7 @@ let sel=null;
 function lineCells(a,b){const dr=b[0]-a[0],dc=b[1]-a[1],len=Math.max(Math.abs(dr),Math.abs(dc));if(!len)return[a];if(!(dr===0||dc===0||Math.abs(dr)===Math.abs(dc)))return null;const sr=Math.sign(dr),sc=Math.sign(dc),o=[];for(let k=0;k<=len;k++)o.push([a[0]+sr*k,a[1]+sc*k]);return o}
 const clearSel=()=>document.querySelectorAll(".cell.sel").forEach(e=>e.classList.remove("sel"));
 function cellFromEvent(e){const el=document.elementFromPoint(e.clientX,e.clientY);return el&&el.classList.contains("cell")?[+el.dataset.r,+el.dataset.c]:null}
-$("board").addEventListener("pointerdown",e=>{const g=S.game;if(!g||!g.startedAt||g.finished)return;const c=cellFromEvent(e);if(!c)return;sel={a:c,cells:[c]};clearSel();cellAt(...c).classList.add("sel");e.preventDefault()});
+$("board").addEventListener("pointerdown",e=>{const g=S.game;if(!g||!g.startedAt||g.finished||g.locked)return;const c=cellFromEvent(e);if(!c)return;sel={a:c,cells:[c]};clearSel();cellAt(...c).classList.add("sel");e.preventDefault()});
 window.addEventListener("pointermove",e=>{if(!sel)return;const c=cellFromEvent(e);if(!c)return;const l=lineCells(sel.a,c);if(!l)return;sel.cells=l;clearSel();l.forEach(x=>cellAt(...x).classList.add("sel"))});
 window.addEventListener("pointerup",()=>{if(!sel)return;const cells=sel.cells;sel=null;clearSel();check(cells)});
 function check(cells){
@@ -519,7 +530,7 @@ function check(cells){
     if(w.cells===cells||key===k2||key===k3){g.found.add(w.w);paint(w.cells,COLORS[i%COLORS.length]);drawWords();if(g.found.size===g.puz.words.length)finish()}});
 }
 async function finish(){
-  Horror.stop();
+  Horror.stop();Grenade.clear();
   const g=S.game;g.finished=true;clearInterval(g.timer);let ms=Date.now()+S.skew-g.startedAt;$("timer").textContent=fmt(ms);
   let saved=false;
   for(let i=0;i<3;i++){try{await updDoc("runs/"+runId(g.phase),{done:true,finishedAt:TS()});saved=true;break}catch(e){console.warn(e);await new Promise(r=>setTimeout(r,800))}}
@@ -535,7 +546,7 @@ async function finish(){
   $("dlgHome").onclick=()=>{ov.classList.add("hidden");enterHome()};
   if(np)$("dlgNext").onclick=()=>{ov.classList.add("hidden");startPhase(np)};
 }
-$("backBtn").onclick=()=>{Horror.stop();if(S.game)clearInterval(S.game.timer);$("overlay").classList.add("hidden");enterHome()};
+$("backBtn").onclick=()=>{Horror.stop();Grenade.clear();if(S.game)clearInterval(S.game.timer);$("overlay").classList.add("hidden");enterHome()};
 window.addEventListener("resize",()=>{if(S.game&&!$("gameSec").classList.contains("hidden"))drawBoard(!S.game.startedAt)});
 
 // ---------- modo Impossível: cronômetro misterioso ----------
@@ -561,5 +572,50 @@ const Horror=(()=>{
   H.stop=()=>{on=false;iv.forEach(clearInterval);iv=[];clearTimeout(beatT);H.glitching=false;document.body.classList.remove("horror","shake");["hFog","hGhost","hWhisper","hMute","hScare"].forEach(i=>el(i)&&el(i).classList.add("hidden"));const t=el("timer");if(t)t.classList.remove("glitch")};
   document.addEventListener("click",e=>{if(e.target&&e.target.id==="hMute"){muted=!muted;e.target.textContent=muted?"🔇":"🔊"}});
   return H;
+})();
+
+// ---------- modo Granada ----------
+const Grenade=(()=>{
+  const LIMIT=90000,FUSE=60000;
+  function myAvg(exceptPhase){let n=0,t=0;for(const r of S.runs){if(r.user!==S.me.key||!r.done||r.phase===exceptPhase)continue;const m=runMs(r);if(m!=null){n++;t+=m}}return n?t/n:null}
+  function setTag(html,hot){const el=$("grenTag");el.innerHTML=html;el.classList.remove("hidden");el.classList.toggle("hot",!!hot)}
+  function reshuffle(g){ // mesmas palavras, posições novas
+    const d=DIFF[g.sp.diff],n=g.puz.n,rnd=mulberry(hash(g.sp.code+"#granada")()),R=k=>Math.floor(rnd()*k);
+    for(let att=0;att<80;att++){const grid=Array.from({length:n},()=>Array(n).fill(""));const words=[];let ok=true;
+      for(const w of g.puz.words){let placed=false;for(let t=0;t<300&&!placed;t++){const [dr,dc]=d.dirs[R(d.dirs.length)];const r=R(n),c=R(n);const er=r+dr*(w.w.length-1),ec=c+dc*(w.w.length-1);if(er<0||er>=n||ec<0||ec>=n)continue;
+        let fit=true;for(let k=0;k<w.w.length;k++){const x=grid[r+dr*k][c+dc*k];if(x&&x!==w.w[k]){fit=false;break}}if(!fit)continue;const cells=[];for(let k=0;k<w.w.length;k++){grid[r+dr*k][c+dc*k]=w.w[k];cells.push([r+dr*k,c+dc*k])}words.push({w:w.w,cells});placed=true}
+        if(!placed){ok=false;break}}
+      if(!ok)continue;const L="ABCDEFGHIJLMNOPQRSTUVXZ";for(let r=0;r<n;r++)for(let c=0;c<n;c++)if(!grid[r][c])grid[r][c]=L[R(L.length)];
+      return{...g.puz,g:grid,words}}
+    return g.puz;
+  }
+  function boom(){if(!window.AudioContext&&!window.webkitAudioContext)return;try{const ac=new (window.AudioContext||window.webkitAudioContext)();
+      const o=ac.createOscillator(),gn=ac.createGain();o.frequency.setValueAtTime(1400,ac.currentTime);o.frequency.exponentialRampToValueAtTime(300,ac.currentTime+0.9);gn.gain.setValueAtTime(0.08,ac.currentTime);gn.gain.linearRampToValueAtTime(0.001,ac.currentTime+0.95);o.connect(gn);gn.connect(ac.destination);o.start();o.stop(ac.currentTime+0.95);
+      const len=ac.sampleRate*1.2,buf=ac.createBuffer(1,len,ac.sampleRate),dt=buf.getChannelData(0);for(let i=0;i<len;i++)dt[i]=(Math.random()*2-1)*Math.pow(1-i/len,2.5);
+      const src=ac.createBufferSource(),f=ac.createBiquadFilter(),g2=ac.createGain();src.buffer=buf;f.type="lowpass";f.frequency.value=900;g2.gain.value=1.2;src.connect(f);f.connect(g2);g2.connect(ac.destination);src.start(ac.currentTime+1.0)}catch(e){}}
+  function explode(g,animate){
+    g.grenadeDone=true;
+    const apply=()=>{g.puz=reshuffle(g);g.found=new Set();drawBoard(false);drawWords();g.locked=false;setTag("💥 A granada explodiu! Comece de novo.",true)};
+    if(!animate){apply();return}
+    g.locked=true;boom();const b=$("board");const rect=b.getBoundingClientRect();
+    const gr=$("grenade");gr.style.left=(rect.left+rect.width/2-40)+"px";gr.style.setProperty("--land",(rect.top+rect.height/2-40)+"px");gr.classList.remove("hidden","drop");void gr.offsetWidth;gr.classList.add("drop");
+    setTimeout(()=>{gr.classList.add("hidden");const ex=$("explosion");ex.style.left=(rect.left+rect.width/2)+"px";ex.style.top=(rect.top+rect.height/2)+"px";ex.classList.remove("hidden","go");void ex.offsetWidth;ex.classList.add("go");document.body.classList.add("shake");
+      [...b.children].forEach(c=>{c.style.transition="transform .7s cubic-bezier(.2,.8,.3,1),opacity .7s";c.style.transform=`translate(${(Math.random()-.5)*900}px,${(Math.random()-.5)*900}px) rotate(${(Math.random()-.5)*720}deg)`;c.style.opacity="0"});
+    },1000);
+    setTimeout(()=>{document.body.classList.remove("shake");ex.classList.add("hidden");apply()},2000);
+    const ex=$("explosion");
+  }
+  return{
+    setup(g){const el=$("grenTag");el.classList.add("hidden");g.grenadeArmed=false;g.grenadeDone=false;g.locked=false;
+      if(modeOf()!=="G")return;const avg=myAvg(g.phase);
+      if(avg==null){setTag("💣 Granada: jogue esta fase para calcular sua média",false);return}
+      if(avg<LIMIT){g.grenadeArmed=true;setTag(`💣 Granada ARMADA (sua média ${fmt(avg)}). Ela cai em 1:00!`,true);
+        const ms=Date.now()+S.skew-g.startedAt;if(ms>=FUSE)explode(g,false)}
+      else setTag(`🧯 Granada desarmada (sua média ${fmt(avg)})`,false)},
+    tick(g,ms){if(!g.grenadeArmed||g.grenadeDone||g.finished)return;const left=FUSE-ms;
+      if(left<=0){explode(g,true);return}
+      if(left<=10000){const el=$("grenTag");el.textContent=`💣 ${Math.ceil(left/1000)}…`;el.classList.add("hot")}},
+    clear(){const el=$("grenTag");if(el)el.classList.add("hidden");["grenade","explosion"].forEach(i=>$(i)&&$(i).classList.add("hidden"));document.body.classList.remove("shake")}
+  };
 })();
 </script></body></html>
